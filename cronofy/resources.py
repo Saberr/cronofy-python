@@ -6,7 +6,7 @@ import requests
 
 
 def convert_to_cronofy_object(resp, type):
-    types = {'calendar': Calendar}
+    types = {'calendar': Calendar, 'event' : Event, 'token': Token}
 
     if isinstance(resp, list):
         return [convert_to_cronofy_object(i,type) for i in resp]
@@ -119,6 +119,40 @@ class APIResource(CronofyObject):
         return str(urllib.quote_plus(cls.__name__.lower()))
 
 
+class OauthAPIResource(APIResource):
+
+    @classmethod
+    def class_url(cls):
+        cls_name = cls.class_name()
+        return "/oauth/%s" % (cls_name,)
+
+class Token(OauthAPIResource):
+
+    @classmethod
+    def _post_request(cls, post_data):
+        post_data["client_id"] = cronofy.client_id
+        post_data["client_secret"] = cronofy.client_secret
+
+        response = requests.post("%s%s" % (cronofy.api_base, cls.class_url(),),
+                                 data=json.dumps(post_data),
+                                 headers={'content-type': 'application/json'})
+        if response.status_code == requests.codes.ok:
+            item = response.json()
+            return convert_to_cronofy_object(item, cls.class_name().lower())
+        else:
+            # TODO: wrap HTTP errors and throw our own
+            raise CronofyError("Something is wrong", response.text, response.status_code)
+
+    @classmethod
+    def acquire(cls, code, original_redirect_uri):
+        post_data = {'code': code, 'redirect_uri': original_redirect_uri,'grant_type': 'authorization_code'}
+        return cls._post_request(post_data)
+
+    @classmethod
+    def refresh(cls, refresh_token):
+        post_data = {'refresh_token' : refresh_token,'grant_type': 'refresh_token'}
+        return cls._post_request(post_data)
+
 
 class ListableAPIResource(APIResource):
 
@@ -129,11 +163,9 @@ class ListableAPIResource(APIResource):
 
     @classmethod
     def all(cls, access_token, **params):
-        #TODO: put request part in a method in superclass?
-        #TODO: add params as querystring items?
-        #TODO: wrap HTTP errors and throw our own
-        response = requests.get("%s%s" % (cronofy.api_base, cls.class_url(),), headers={'content-type': 'application/json',
-                                                                                        'authorization': 'Bearer %s' % access_token})
+        response = requests.get("%s%s" % (cronofy.api_base, cls.class_url(),),
+                                params=params,
+                                headers={'content-type': 'application/json', 'authorization': 'Bearer %s' % access_token})
 
         if response.status_code == requests.codes.ok:
             items = response.json()["%ss" % cls.class_name().lower()]
@@ -141,14 +173,18 @@ class ListableAPIResource(APIResource):
             #TODO: add the following of pagination?
             return convert_to_cronofy_object(items, cls.class_name().lower())
         else:
+            #TODO: wrap HTTP errors and throw our own
             raise CronofyError("Something is wrong", response.text, response.status_code)
-
-
 
 # API objects
 class Calendar(ListableAPIResource):
     pass
 
+class Event(ListableAPIResource):
+    @classmethod
+    def all(cls, access_token, tz="UTC/UTC", **params):
+        params["tz"] = tz
+        return super(Event, cls).all(access_token, **params)
 
 
 # Exceptions
@@ -168,4 +204,9 @@ class CronofyError(Exception):
 
         self.http_status = http_status
         self.json_body = json_body
+
+    def __str__(self):
+        return "%s %s %s" % (super(CronofyError, self).__str__(), self.http_status, self.http_body)
+
+
 

@@ -3,7 +3,7 @@ client_secret = None
 api_base = 'https://api.cronofy.com'
 
 # Resource
-from resources import (Calendar,Event,Token,CronofyError)
+from cronofy.resources import (Calendar,Event,Token,CronofyError)
 
 # Util
-from utils import (Util,)
+from cronofy.utils import (Util,)

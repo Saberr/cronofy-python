@@ -13,4 +13,4 @@ class Util():
                "client_id=%s&" \
                "redirect_uri=%s" \
                "&scope=%s&" \
-               "state=%s" % (cronofy.api_base, cronofy.client_id, urllib.quote(redirect_uri), urllib.quote(scope), urllib.quote(state))
+               "state=%s" % (cronofy.api_base, cronofy.client_id, urllib.quote_plus(redirect_uri), urllib.quote(scope), urllib.quote(state))

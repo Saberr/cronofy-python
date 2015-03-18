@@ -162,7 +162,7 @@ class ListableAPIResource(APIResource):
         return "/v1/%ss" % (cls_name,)
 
     @classmethod
-    def all(cls, access_token, **params):
+    def all(cls, access_token, params):
         response = requests.get("%s%s" % (cronofy.api_base, cls.class_url(),),
                                 params=params,
                                 headers={'content-type': 'application/json', 'authorization': 'Bearer %s' % access_token})
@@ -182,9 +182,14 @@ class Calendar(ListableAPIResource):
 
 class Event(ListableAPIResource):
     @classmethod
-    def all(cls, access_token, tz="UTC/UTC", **params):
-        params["tz"] = tz
-        return super(Event, cls).all(access_token, **params)
+    def all(cls, access_token, params=None):
+        if params is None:
+            params = {}
+
+        if "tzid" not in params:
+            params["tzid"] = "Etc/UTC"
+
+        return super(Event, cls).all(access_token, params)
 
 
 # Exceptions

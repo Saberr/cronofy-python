@@ -66,7 +66,7 @@ class ResourceTest(TestCase):
                       body=json.dumps(DUMMY_CALENDARS), status=200,
                       content_type='application/json')
 
-        calendars = Calendar.all(access_token="DUMMY")
+        calendars = Calendar.all(access_token="DUMMY",params=None)
 
         self.assertEqual(3, len(calendars))
 

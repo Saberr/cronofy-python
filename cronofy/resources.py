@@ -118,6 +118,23 @@ class APIResource(CronofyObject):
                 'actions on its subclasses')
         return str(urllib.quote_plus(cls.__name__.lower()))
 
+class Account(APIResource):
+
+    @classmethod
+    def fetch(cls, access_token):
+        response = requests.get("%s/v1/%s" % (cronofy.api_base, cls.class_name(),),
+                                headers={'content-type': 'application/json', 'authorization': 'Bearer %s' % access_token})
+
+        if response.status_code == requests.codes.ok:
+            items = response.json()["%ss" % cls.class_name().lower()]
+
+            #TODO: add the following of pagination?
+            return convert_to_cronofy_object(items, cls.class_name().lower())
+        else:
+            #TODO: wrap HTTP errors and throw our own
+            raise CronofyError("Something is wrong", response.text, response.status_code)
+
+
 
 class OauthAPIResource(APIResource):
 

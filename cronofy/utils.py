@@ -8,7 +8,7 @@ class Util():
         pass
 
     @classmethod
-    def get_authorisation_url(cls, redirect_uri, scope="list_calendars read_events", state="state"):
+    def get_authorisation_url(cls, redirect_uri, scope="list_calendars read_events read_account", state="state"):
         return "%s/oauth/authorize?response_type=code&" \
                "client_id=%s&" \
                "redirect_uri=%s" \

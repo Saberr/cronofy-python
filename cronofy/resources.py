@@ -126,7 +126,7 @@ class Account(APIResource):
                                 headers={'content-type': 'application/json', 'authorization': 'Bearer %s' % access_token})
 
         if response.status_code == requests.codes.ok:
-            items = response.json()["%ss" % cls.class_name().lower()]
+            items = response.json()["%s" % cls.class_name().lower()]
 
             #TODO: add the following of pagination?
             return convert_to_cronofy_object(items, cls.class_name().lower())
